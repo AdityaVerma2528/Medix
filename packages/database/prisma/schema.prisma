@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  createdAt     DateTime   @default(now())
+  emailVerified Boolean    @default(false)
+  lastLoginAt   DateTime?
+  name          String
+  passwordHash  String
+  role          UserRole
+  status        UserStatus @default(PENDING)
+  updatedAt     DateTime   @updatedAt
+  patient       Patient?
+}
+
+model Patient {
+  id                String             @id @default(uuid())
+  userId            String             @unique
+  firstName         String
+  lastName          String
+  phoneNumber       String
+  dob               DateTime
+  gender            Gender
+  bloodGroup        BloodGroup?
+  allergies         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  addresses         Address[]
+  cart              Cart?
+  emergencyContacts EmergencyContact[]
+  notifications     Notification[]
+  orders            Order[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prescriptions     Prescription[]
+}
+
+model Address {
+  id         String       @id @default(uuid())
+  patientId  String
+  label      AddressLabel
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  landmark   String?
+  isDefault  Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  patient    Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  orders     Order[]
+}
+
+model EmergencyContact {
+  id           String   @id @default(uuid())
+  patientId    String
+  name         String
+  phoneNumber  String
+  relationship String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  patientId String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
+}
+
+model CartItem {
+  id         String   @id @default(uuid())
+  quantity   Int
+  unitPrice  Decimal
+  cartId     String
+  medicineId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  medicine   Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  patientId      String
+  addressId      String
+  orderNumber    String      @unique
+  orderStatus    OrderStatus
+  subtotal       Decimal
+  tax            Decimal
+  deliveryCharge Decimal
+  discount       Decimal
+  total          Decimal
+  placedAt       DateTime    @default(now())
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  address        Address     @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  patient        Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  orderItems     OrderItem[]
+  payment        Payment?
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  medicineId String
+  quantity   Int
+  price      Decimal
+  medicine   Medicine @relation(fields: [medicineId], references: [id], onDelete: Cascade)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  orderId       String        @unique
+  amount        Decimal
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus
+  transactionId String        @unique
+  paidAt        DateTime      @default(now())
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Prescription {
+  id         String             @id @default(uuid())
+  imageUrl   String
+  status     PrescriptionStatus
+  notes      String?
+  patientId  String
+  uploadedAt DateTime           @default(now())
+  reviewedAt DateTime?
+  patient    Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id               String           @id @default(uuid())
+  patientId        String
+  title            String
+  message          String
+  notificationType NotificationType
+  isRead           Boolean          @default(false)
+  readAt           DateTime?
+  createdAt        DateTime         @default(now())
+  patient          Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Medicine {
+  id                   String       @id @default(uuid())
+  sku                  String       @unique
+  barcode              String       @unique
+  name                 String
+  genericName          String
+  brandName            String
+  description          String?
+  composition          String
+  strength             String
+  dosageForm           DosageForm
+  price                Decimal
+  stock                Int
+  requiresPrescription Boolean      @default(false)
+  image                String
+  isActive             Boolean      @default(true)
+  categoryId           String
+  manufacturerId       String
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  cartItems            CartItem[]
+  category             Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  manufacturer         Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  orderItems           OrderItem[]
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  slug        String     @unique
+  description String
+  image       String
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  medicines   Medicine[]
+}
+
+model Manufacturer {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  logo      String?
+  website   String?
+  email     String
+  phone     String
+  country   String
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  medicines Medicine[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+}
+
+enum AddressLabel {
+  HOME
+  OFFICE
+  OTHER
+}
+
+enum UserRole {
+  PATIENT
+  ADMIN
+  STAFF
+  PHARMACIST
+  DELIVERY
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum DosageForm {
+  TABLET
+  CAPSULE
+  SYRUP
+  CREAM
+  INJECTION
+  OINTMENT
+  DROPS
+}
+
+enum PrescriptionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+  PROMOTION
+  PRESCRIPTION
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  UPI
+  NET_BANKING
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}

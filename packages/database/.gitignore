@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Prisma generated client
+prisma/generated/
+
+# If this folder is also generated
+src/generated/

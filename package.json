@@ -1,6 +1,7 @@
 {
   "name": "pharmacy-project",
   "private": true,
+  "packageManager": "npm@10.9.2",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -11,7 +12,7 @@
   "devDependencies": {
     "prettier": "^3.7.4",
     "turbo": "^2.10.4",
-    "typescript": "5.9.2"
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18"
@@ -23,7 +24,7 @@
     }
   },
   "workspaces": [
-    "apps/*",
+    "apps/**",
     "packages/*"
   ]
 }
