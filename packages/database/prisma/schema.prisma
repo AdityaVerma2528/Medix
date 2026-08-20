@@ -21,6 +21,18 @@ model User {
   patient       Patient?
 }
 
+model EmailOtp {
+  id         String      @id @default(uuid())
+  email      String
+  otpHash    String
+  purpose    OtpPurpose
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime    @default(now())
+
+  @@unique([email, purpose])
+}
+
 model Patient {
   id                String             @id @default(uuid())
   userId            String             @unique
@@ -290,4 +302,11 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   REFUNDED
+}
+
+enum OtpPurpose {
+  LOGIN
+  SIGNUP
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
 }

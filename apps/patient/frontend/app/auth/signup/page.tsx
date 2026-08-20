@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Mail, User } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { useRouter } from "next/navigation";
 
 import { AuthLayout } from "@/components/auth/layout";
@@ -18,6 +18,7 @@ import { AuthButton } from "@/components/auth/button";
 import { Divider } from "@/components/auth/divider";
 import { SocialButton } from "@/components/auth/social-button";
 import { AuthFooter } from "@/components/auth/footer";
+import { signup } from "@/lib/auth";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 10 },
@@ -33,9 +34,8 @@ interface FormErrors {
 }
 
 export default function SignupPage() {
-  const router = useRouter(); 
-  const backendUrl = "http://localhost:5000"; 
-  
+  const router = useRouter();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,20 +63,23 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const data = {
-        email,
-        password,
-        name
-      }
+      const response = await signup({ email, password, name });
 
-      const response = await axios.post(`${backendUrl}/auth/signup`, data); 
+      console.log("Signup response", response);
 
-      if (response.status === 200) { 
-        toast.success("Account created");
-        router.push("/login"); 
+      toast.success("Account created");
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
+
+      if (isAxiosError(error)) {
+        toast.error(
+          error.response?.data?.message ||
+          "Something went wrong. Try again."
+        );
+      } else {
+        toast.error("Something went wrong. Try again.");
       }
-    } catch {
-      toast.error("Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
