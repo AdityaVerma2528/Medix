@@ -37,8 +37,6 @@ export interface VerifyPasswordResetOtpData {
 }
 
 export interface ResetPasswordData {
-    email: string;
-    otp: string;
     newPassword: string;
 }
 
@@ -108,10 +106,18 @@ export async function verifyPasswordResetOtp(
     return response.data;
 }
 
-export async function resetPassword(data: ResetPasswordData) {
+export async function resetPassword(
+    data: ResetPasswordData, 
+    resetToken: string
+) {
     const response = await authApi.post(
         "/forgot-password/reset",
-        data
+        data,
+        {
+            headers: {
+                Authorization: `Bearer ${resetToken}`
+            },
+        }
     );
 
     return response.data;

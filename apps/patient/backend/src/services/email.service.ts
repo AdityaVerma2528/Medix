@@ -21,3 +21,15 @@ export async function sendLoginOtpEmail(
         text: `Your login OTP is ${otp}. It expires in 5 minutes.`,
     });
 }
+
+export async function sendPasswordResetOtpEmail(
+    email: string,
+    otp: string,
+): Promise<void> {
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: email,
+        subject: "Your Medix Password Reset OTP",
+        text: `Your password reset OTP is ${otp}. It expires in 5 minutes.`,
+    });
+}

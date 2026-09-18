@@ -28,3 +28,22 @@ export function setAuthCookie(res: Response, token: string): void {
                 : "lax",
     });
 }
+
+export function createPasswordResetToken(payload: JwtPayload) {
+    const jwtSecret = process.env.JWT_SECRET;
+
+    if (!jwtSecret) {
+        throw new Error("JWT_SECRET is not configured");
+    }
+
+    return jwt.sign(
+        { 
+            ...payload, 
+            purpose: "PASSWORD_RESET"
+        }, 
+        jwtSecret, 
+        { 
+            expiresIn: "10m", 
+        }
+    ); 
+}
